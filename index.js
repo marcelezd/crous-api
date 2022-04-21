@@ -1,9 +1,12 @@
-const api_url =
-  'http://webservices-v2.crous-mobile.fr:8080/feed/bordeaux/externe/crous-bordeaux.min.json'
+import { Router } from 'itty-router'
+import api from './api'
+import crous from './crous'
+
+const router = Router()
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,HEAD,OPTIONS',
+  'Access-Control-Allow-Methods': 'GET,OPTIONS',
   'Access-Control-Max-Age': '86400',
 }
 
@@ -43,16 +46,15 @@ function handleOptions(request) {
     })
   } else {
     // Handle standard OPTIONS request.
-    // If you want to allow other HTTP Methods, you can do that here.
     return new Response(null, {
       headers: {
-        Allow: 'GET, HEAD, OPTIONS',
+        Allow: 'GET, OPTIONS',
       },
     })
   }
 }
 
-async function handleRequest(request) {
+async function get_ru(crous_name) {
   const rq_init = {
     method: 'GET',
     headers: {
@@ -61,27 +63,51 @@ async function handleRequest(request) {
     },
   }
 
-  const rp_init = {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Content-Type': 'application/json',
-    },
+  if (Object.keys(crous).includes(crous_name.toLowerCase())) {
+    const response = await fetch(
+      api.DOMAIN + api['FEED_' + crous_name.toUpperCase()],
+      rq_init,
+    )
+    if (!response.ok) {
+      return new Response(
+        'error when fetching data, crous server returned ' + response.status,
+        {
+          status: 500,
+        },
+      )
+    }
+
+    let results = await response.text()
+    // for some reason there are tabs in the strings which causes the json to be invalid
+    results = results.replaceAll('\t', ' ')
+
+    return new Response(results, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+    })
+  } else {
+    return new Response('crous not found', { status: 404 })
   }
-
-  const response = await fetch(api_url, rq_init)
-  const results = await gatherResponse(response)
-
-  return new Response(results, rp_init)
 }
 
+router.get(
+  '/api/crous',
+  () =>
+    new Response(JSON.stringify(Object.keys(crous)), {
+      headers: { 'Content-Type': 'application/json' },
+    }),
+)
+
+router.get('/api/:crous/ru', ({ params }) => get_ru(`${params.crous}`))
+
+router.get('*', () => new Response(null, { status: 400 }))
+
+router.options('*', handleOptions)
+
+router.all('*', () => new Response(null, { status: 405 }))
+
 addEventListener('fetch', (event) => {
-  const request = event.request
-  if (request.method === 'OPTIONS') {
-    // Handle CORS preflight requests
-    event.respondWith(handleOptions(request))
-  } else if (request.method === 'GET') {
-    event.respondWith(handleRequest(request))
-  } else {
-    return new Response(null, { status: 405 })
-  }
+  event.respondWith(router.handle(event.request))
 })

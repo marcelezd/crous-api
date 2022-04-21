@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "crous-api",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A proxy for the crous' api",
   "main": "index.js",
   "scripts": {
@@ -12,5 +12,8 @@
   "license": "MIT",
   "devDependencies": {
     "prettier": "^1.18.2"
+  },
+  "dependencies": {
+    "itty-router": "^2.6.1"
   }
 }
