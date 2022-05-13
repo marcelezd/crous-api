@@ -8,6 +8,7 @@ export default {
   FEED_BORDEAUX: 'feed/bordeaux/externe/crous-bordeaux.min.json',
   FEED_CLERMONT:
     'feed/clermont.ferrand/externe/crous-clermont.ferrand.min.json',
+  // oui oui, corte
   FEED_CORSE: 'feed/corte/externe/crous-corte.min.json',
   FEED_CRETEIL: 'feed/creteil/externe/crous-creteil.min.json',
   FEED_GRENOBLE: 'feed/grenoble/externe/crous-grenoble.min.json',
